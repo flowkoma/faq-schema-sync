@@ -59,9 +59,12 @@ export async function testSiteConnection(site) {
   };
 
   const fieldCheck = (collection, label, slug, expectation) => {
-    const field = (collection.fields || []).find((f) => f.slug === slug);
+    const fields = collection.fields || [];
+    const field = fields.find((f) => f.slug === slug);
     if (!field) {
-      add(`${label} field "${slug}"`, false, 'slug not found in collection');
+      // Help the admin find the right value: slugs differ from display names.
+      const available = fields.map((f) => `${f.slug} (${f.displayName}, ${f.type})`).join(', ');
+      add(`${label} field "${slug}"`, false, `slug not found — available: ${available}`);
       return;
     }
     add(`${label} field "${slug}"`, true, `type: ${field.type}${expectation && field.type !== expectation ? ` (expected ${expectation})` : ''}`);
