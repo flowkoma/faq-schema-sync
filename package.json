@@ -3,6 +3,7 @@
   "version": "2.0.0",
   "description": "Multi-site Webflow webhook service that generates FAQPage JSON-LD from a multi-reference FAQ field and writes it back to a plain text field on the blog item. Managed through a built-in admin UI.",
   "type": "module",
+  "license": "MIT",
   "main": "src/server.js",
   "engines": {
     "node": ">=18"
