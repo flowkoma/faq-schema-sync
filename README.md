@@ -33,7 +33,7 @@ POST /webhooks/webflow/<site-config-id>?token=<per-site-secret>
 
 The UI can, per site:
 
-- **Test connection** — verifies the token, both collections, and that every configured field slug actually exists (with type checks).
+- **Test connection** — verifies the token, both collections, and that every configured field slug actually exists (with type checks). When a slug doesn't match, it lists every field in the collection with its slug, display name, and type — the most common mistake is entering display names (e.g. "FAQ jsonld") instead of slugs (`faq-jsonld`).
 - **Register webhooks** — creates the three CMS webhooks in Webflow via the API, pointing at this deployment. Re-clicking replaces previous registrations instead of duplicating them.
 - **Resync all posts** — backfill/recovery: regenerates the schema for every blog post.
 
@@ -48,20 +48,22 @@ The UI can, per site:
 
    Insert the field with the embed's **+ Add Field** button — don't type the placeholder manually. Set the embed's **conditional visibility** to *"FAQ Schema JSON is set"* so posts without FAQs render no empty script tag.
 3. Note the **site ID**, **collection IDs** (Designer: collection settings, or via API), and **field slugs**.
-4. Create a **site token** with **CMS read/write** and **Sites read** scopes (Sites read is needed for webhook registration).
+4. Create a **site token** with **CMS: read and write** and **Sites: read and write** scopes (`sites:write` is required for webhook registration — with read-only Sites, everything works except the **Register webhooks** button). All other scope categories can stay at *No access*.
 
 ## Deploy to Railway
 
 1. Push this repo to GitHub and create a new Railway project from it. Railway auto-detects Node and runs `npm start`.
 2. Set `ADMIN_PASSWORD` in Railway's Variables tab (generate with `openssl rand -hex 16`).
-3. **Attach a volume** (e.g. mounted at `/data`) and set `DATA_DIR=/data` — otherwise site configs are lost on every redeploy.
-4. Keep the service **always-on** (disable app sleeping) for reliable webhook delivery.
+3. **Attach a volume** (right-click the service → *Attach volume*) mounted at `/data`, and set `DATA_DIR=/data` — otherwise site configs are lost on every redeploy.
+4. **Generate a public domain** (service → Settings → Networking → *Generate Domain*). The target port must match the port the app listens on: Railway injects a `PORT` variable (typically `8080`) which the app uses, so pick the same port for the domain. If you get a 502 with the app logging `listening on :8080`, the domain is pointing at the wrong port.
 5. Confirm `GET https://your-app.up.railway.app/health` returns `{"ok":true,...}`.
+
+Every push to `main` auto-deploys. Site configs live on the volume, so deploys never touch them.
 
 ## Onboard a site
 
 1. Open `https://your-app.up.railway.app/`, sign in with the admin password.
-2. **+ Add site**, fill in the token, site ID, collection IDs, and slugs.
+2. **+ Add site**, fill in the token, site ID, collection IDs, and field **slugs** (not display names — collection settings show the slug on each field).
 3. Click **Test connection** — fix anything red.
 4. Click **Register webhooks**.
 5. Click **Resync all posts** to backfill existing content. Watch the Railway logs — each post logs `updated / skipped (unchanged) / cleared`.
