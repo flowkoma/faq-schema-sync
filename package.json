@@ -1,0 +1,17 @@
+{
+  "name": "faq-schema-sync",
+  "version": "2.0.0",
+  "description": "Multi-site Webflow webhook service that generates FAQPage JSON-LD from a multi-reference FAQ field and writes it back to a plain text field on the blog item. Managed through a built-in admin UI.",
+  "type": "module",
+  "main": "src/server.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node scripts/smoke-test.js"
+  },
+  "dependencies": {
+    "fastify": "^4.28.1"
+  }
+}

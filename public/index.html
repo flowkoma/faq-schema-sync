@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>FAQ Schema Sync</title>
+<style>
+  :root {
+    --bg: #0e1116; --panel: #161b23; --panel2: #1c232e; --border: #29323f;
+    --text: #e6ebf2; --muted: #8b97a7; --accent: #4f7cff; --accent2: #3a63d8;
+    --ok: #35c78a; --bad: #ef5f6b; --warn: #e6b450; --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 32px 20px 80px; }
+  header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+  h1 { font-size: 20px; margin: 0; letter-spacing: -0.01em; }
+  h1 span { color: var(--accent); }
+  .stats { color: var(--muted); font-size: 13px; }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 16px; }
+  .card h2 { margin: 0 0 4px; font-size: 16px; }
+  .meta { color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+  .meta code { font-family: var(--mono); font-size: 12px; color: var(--text); background: var(--panel2); padding: 1px 6px; border-radius: 5px; }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  button { background: var(--panel2); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 7px 14px; font: inherit; font-size: 13px; cursor: pointer; }
+  button:hover { border-color: var(--accent); }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.primary:hover { background: var(--accent2); }
+  button.danger:hover { border-color: var(--bad); color: var(--bad); }
+  button:disabled { opacity: 0.5; cursor: wait; }
+  label { display: block; font-size: 12px; color: var(--muted); margin: 12px 0 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+  input { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; font: inherit; font-size: 14px; }
+  input:focus { outline: none; border-color: var(--accent); }
+  input.mono { font-family: var(--mono); font-size: 13px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+  @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .out { font-family: var(--mono); font-size: 12px; white-space: pre-wrap; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; margin-top: 12px; max-height: 260px; overflow: auto; }
+  .out:empty { display: none; }
+  .ok { color: var(--ok); } .bad { color: var(--bad); } .warn { color: var(--warn); }
+  .badge { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 20px; border: 1px solid var(--border); color: var(--muted); vertical-align: 2px; margin-left: 8px; }
+  .badge.ok { border-color: var(--ok); color: var(--ok); }
+  .hookurl { display: flex; gap: 8px; align-items: center; margin: 10px 0 14px; }
+  .hookurl code { flex: 1; font-family: var(--mono); font-size: 11px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; overflow-x: auto; white-space: nowrap; color: var(--muted); }
+  .empty { text-align: center; color: var(--muted); padding: 48px 20px; }
+  #login { max-width: 380px; margin: 15vh auto 0; }
+  .topline { display: flex; justify-content: space-between; align-items: center; margin: 24px 0 12px; }
+  .topline h3 { margin: 0; font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+  .err { color: var(--bad); font-size: 13px; margin-top: 10px; min-height: 18px; }
+</style>
+</head>
+<body>
+
+<div id="login" class="wrap" hidden>
+  <div class="card">
+    <h2>FAQ <span style="color:var(--accent)">Schema Sync</span></h2>
+    <p class="meta">Enter the admin password (the ADMIN_PASSWORD environment variable).</p>
+    <label for="pw">Password</label>
+    <input id="pw" type="password" autocomplete="current-password">
+    <div class="err" id="loginErr"></div>
+    <div class="row" style="margin-top:12px">
+      <button class="primary" id="loginBtn">Sign in</button>
+    </div>
+  </div>
+</div>
+
+<div id="main" class="wrap" hidden>
+  <header>
+    <h1>FAQ <span>Schema Sync</span></h1>
+    <div class="row">
+      <span class="stats" id="stats"></span>
+      <button id="logoutBtn">Sign out</button>
+    </div>
+  </header>
+
+  <div class="topline">
+    <h3>Sites</h3>
+    <button class="primary" id="addBtn">+ Add site</button>
+  </div>
+
+  <div id="formCard" class="card" hidden>
+    <h2 id="formTitle">Add site</h2>
+    <p class="meta">Values come from Webflow: site settings → Apps &amp; Integrations for the token; collection settings for IDs and field slugs.</p>
+    <form id="siteForm">
+      <input type="hidden" name="id">
+      <div class="grid2">
+        <div>
+          <label>Name (label for this UI)</label>
+          <input name="name" required placeholder="Acme Marketing Site">
+        </div>
+        <div>
+          <label>Webflow Site ID</label>
+          <input name="siteId" class="mono" placeholder="65a0f1...">
+        </div>
+        <div style="grid-column:1/-1">
+          <label>API token <span id="tokenHint" style="text-transform:none"></span></label>
+          <input name="apiToken" class="mono" type="password" autocomplete="off" placeholder="Site token with CMS read/write + Sites read scopes">
+        </div>
+        <div>
+          <label>Blog collection ID</label>
+          <input name="blogCollectionId" class="mono">
+        </div>
+        <div>
+          <label>FAQ collection ID</label>
+          <input name="faqCollectionId" class="mono">
+        </div>
+        <div>
+          <label>Blog → FAQ multi-ref slug</label>
+          <input name="blogFaqRefSlug" class="mono" placeholder="faqs">
+        </div>
+        <div>
+          <label>Blog schema field slug (plain text)</label>
+          <input name="blogSchemaFieldSlug" class="mono" placeholder="faq-schema-json">
+        </div>
+        <div>
+          <label>FAQ question slug</label>
+          <input name="faqQuestionSlug" class="mono" placeholder="name">
+        </div>
+        <div>
+          <label>FAQ answer slug</label>
+          <input name="faqAnswerSlug" class="mono" placeholder="answer">
+        </div>
+      </div>
+      <div class="err" id="formErr"></div>
+      <div class="row" style="margin-top:8px">
+        <button type="submit" class="primary">Save site</button>
+        <button type="button" id="cancelBtn">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="sites"></div>
+  <div id="emptyMsg" class="empty" hidden>No sites yet. Add your first Webflow site to start syncing FAQ schema.</div>
+</div>
+
+<script>
+(() => {
+  const $ = (sel, el = document) => el.querySelector(sel);
+  let sites = [];
+
+  const token = () => sessionStorage.getItem('adminToken') || '';
+
+  async function api(path, opts = {}) {
+    const res = await fetch(path, {
+      ...opts,
+      headers: { 'Content-Type': 'application/json', 'x-admin-token': token(), ...(opts.headers || {}) },
+    });
+    if (res.status === 401) { showLogin(); throw new Error('unauthorized'); }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok && data.error) throw new Error(data.error);
+    if (!res.ok) throw new Error('Request failed (' + res.status + ')');
+    return data;
+  }
+
+  function showLogin() {
+    sessionStorage.removeItem('adminToken');
+    $('#main').hidden = true;
+    $('#login').hidden = false;
+    $('#pw').focus();
+  }
+
+  async function tryLogin(pw) {
+    sessionStorage.setItem('adminToken', pw);
+    try {
+      await refresh();
+      $('#login').hidden = true;
+      $('#main').hidden = false;
+      $('#loginErr').textContent = '';
+    } catch (e) {
+      $('#loginErr').textContent = e.message === 'unauthorized' ? 'Wrong password.' : e.message;
+    }
+  }
+
+  $('#loginBtn').addEventListener('click', () => tryLogin($('#pw').value));
+  $('#pw').addEventListener('keydown', (e) => { if (e.key === 'Enter') tryLogin($('#pw').value); });
+  $('#logoutBtn').addEventListener('click', showLogin);
+
+  // --- Sites list --------------------------------------------------------
+
+  async function refresh() {
+    const data = await api('/api/sites');
+    sites = data.sites;
+    $('#stats').textContent =
+      sites.length + ' site(s) · queue: ' + data.queue.pending + ' pending, ' +
+      data.queue.debouncing + ' debouncing' + (data.queue.running ? ', running' : '');
+    render();
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function render() {
+    const box = $('#sites');
+    $('#emptyMsg').hidden = sites.length > 0;
+    box.innerHTML = sites.map((s) => `
+      <div class="card" data-id="${esc(s.id)}">
+        <h2>${esc(s.name)}
+          ${s.webhooksRegisteredAt
+            ? '<span class="badge ok">webhooks registered</span>'
+            : '<span class="badge">webhooks not registered</span>'}
+        </h2>
+        <div class="meta">
+          token <code>${esc(s.apiTokenMasked)}</code> ·
+          site <code>${esc(s.siteId)}</code> ·
+          blog <code>${esc(s.blogCollectionId)}</code> ·
+          faq <code>${esc(s.faqCollectionId)}</code><br>
+          slugs: <code>${esc(s.blogFaqRefSlug)}</code> → schema <code>${esc(s.blogSchemaFieldSlug)}</code>,
+          Q <code>${esc(s.faqQuestionSlug)}</code>, A <code>${esc(s.faqAnswerSlug)}</code>
+        </div>
+        <div class="hookurl">
+          <code>${esc(s.webhookUrl)}</code>
+          <button data-act="copy">Copy</button>
+        </div>
+        <div class="row">
+          <button data-act="test">Test connection</button>
+          <button data-act="register" class="primary">Register webhooks</button>
+          <button data-act="resync">Resync all posts</button>
+          <button data-act="edit">Edit</button>
+          <button data-act="delete" class="danger">Delete</button>
+        </div>
+        <div class="out"></div>
+      </div>`).join('');
+  }
+
+  $('#sites').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const card = btn.closest('.card');
+    const id = card.dataset.id;
+    const site = sites.find((s) => s.id === id);
+    const out = $('.out', card);
+    const act = btn.dataset.act;
+
+    if (act === 'copy') {
+      await navigator.clipboard.writeText(site.webhookUrl);
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+      return;
+    }
+    if (act === 'edit') { openForm(site); return; }
+    if (act === 'delete') {
+      if (!confirm('Delete "' + site.name + '"? Webhooks registered in Webflow are not removed automatically.')) return;
+      await api('/api/sites/' + id, { method: 'DELETE' });
+      await refresh();
+      return;
+    }
+
+    btn.disabled = true;
+    out.textContent = '…';
+    try {
+      if (act === 'test') {
+        const r = await api('/api/sites/' + id + '/test', { method: 'POST' });
+        out.innerHTML = r.checks.map((c) =>
+          '<span class="' + (c.ok ? 'ok' : 'bad') + '">' + (c.ok ? '✔' : '✖') + ' ' + esc(c.name) + '</span>' +
+          (c.detail ? ' — ' + esc(c.detail) : '')).join('\n') +
+          '\n' + (r.ok ? '<span class="ok">All checks passed.</span>' : '<span class="bad">Fix the failing checks above.</span>');
+      } else if (act === 'register') {
+        const r = await api('/api/sites/' + id + '/register-webhooks', { method: 'POST' });
+        out.innerHTML = r.registered.map((w) => '<span class="ok">✔ ' + esc(w.triggerType) + '</span>').join('\n') +
+          (r.removed ? '\n(replaced ' + r.removed + ' previous registration(s))' : '') +
+          '\nURL: ' + esc(r.url);
+        await refresh();
+      } else if (act === 'resync') {
+        const r = await api('/api/sites/' + id + '/resync', { method: 'POST' });
+        out.innerHTML = '<span class="ok">' + esc(r.message) + '</span>';
+      }
+    } catch (err) {
+      out.innerHTML = '<span class="bad">✖ ' + esc(err.message) + '</span>';
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  // --- Add / edit form ----------------------------------------------------
+
+  function openForm(site) {
+    const form = $('#siteForm');
+    form.reset();
+    $('#formErr').textContent = '';
+    form.id.value = site ? site.id : '';
+    $('#formTitle').textContent = site ? 'Edit site: ' + site.name : 'Add site';
+    $('#tokenHint').textContent = site ? '(leave blank to keep current: ' + site.apiTokenMasked + ')' : '';
+    if (site) {
+      for (const k of ['name', 'siteId', 'blogCollectionId', 'faqCollectionId',
+        'blogFaqRefSlug', 'blogSchemaFieldSlug', 'faqQuestionSlug', 'faqAnswerSlug']) {
+        form[k].value = site[k] || '';
+      }
+    }
+    $('#formCard').hidden = false;
+    form.name.focus();
+    $('#formCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  $('#addBtn').addEventListener('click', () => openForm(null));
+  $('#cancelBtn').addEventListener('click', () => { $('#formCard').hidden = true; });
+
+  $('#siteForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const body = Object.fromEntries(new FormData(e.target).entries());
+    if (!body.id) delete body.id;
+    try {
+      await api('/api/sites', { method: 'POST', body: JSON.stringify(body) });
+      $('#formCard').hidden = true;
+      await refresh();
+    } catch (err) {
+      $('#formErr').textContent = err.message;
+    }
+  });
+
+  // --- Boot ---------------------------------------------------------------
+
+  if (token()) {
+    refresh().then(() => { $('#main').hidden = false; }).catch(() => showLogin());
+  } else {
+    showLogin();
+  }
+  setInterval(() => { if (!$('#main').hidden) refresh().catch(() => {}); }, 20000);
+})();
+</script>
+</body>
+</html>
